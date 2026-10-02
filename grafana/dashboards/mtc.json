@@ -1,0 +1,1680 @@
+{
+  "uid": "mtc-utilization",
+  "title": "Machine Status",
+  "tags": [
+    "mtconnect"
+  ],
+  "schemaVersion": 39,
+  "version": 3,
+  "editable": true,
+  "refresh": "10s",
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "annotations": {
+    "list": []
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "device",
+        "label": "Device",
+        "type": "query",
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "mtc-postgres"
+        },
+        "query": "SELECT DISTINCT device FROM events ORDER BY 1",
+        "refresh": 2,
+        "multi": true,
+        "includeAll": true,
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "sort": 1
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Current state",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "mtc-postgres"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 5
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "mtc-postgres"
+          },
+          "refId": "A",
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT DISTINCT ON (device) device, state FROM events WHERE device IN ($device) ORDER BY device, ts DESC, id DESC"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "rowsToFields",
+          "options": {
+            "mappings": [
+              {
+                "fieldName": "device",
+                "handlerKey": "field.name"
+              },
+              {
+                "fieldName": "state",
+                "handlerKey": "field.value"
+              }
+            ]
+          }
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value_and_name",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "ACTIVE": {
+                  "color": "green",
+                  "index": 0
+                },
+                "READY": {
+                  "color": "blue",
+                  "index": 1
+                },
+                "PROGRAM_COMPLETED": {
+                  "color": "light-blue",
+                  "index": 2
+                },
+                "FEED_HOLD": {
+                  "color": "yellow",
+                  "index": 3
+                },
+                "WAIT": {
+                  "color": "yellow",
+                  "index": 4
+                },
+                "INTERRUPTED": {
+                  "color": "orange",
+                  "index": 5
+                },
+                "STOPPED": {
+                  "color": "orange",
+                  "index": 6
+                },
+                "PROGRAM_STOPPED": {
+                  "color": "orange",
+                  "index": 7
+                },
+                "OPTIONAL_STOP": {
+                  "color": "orange",
+                  "index": 8
+                },
+                "UNAVAILABLE": {
+                  "color": "dark-red",
+                  "index": 9
+                },
+                "AGENT_RESTART": {
+                  "color": "purple",
+                  "index": 10
+                }
+              }
+            }
+          ],
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "gray"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "gray",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Time since last state change",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "mtc-postgres"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 12,
+        "h": 5
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "mtc-postgres"
+          },
+          "refId": "A",
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT device, EXTRACT(EPOCH FROM now() - MAX(ts)) AS seconds FROM events WHERE device IN ($device) GROUP BY device ORDER BY device"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "rowsToFields",
+          "options": {
+            "mappings": [
+              {
+                "fieldName": "device",
+                "handlerKey": "field.name"
+              },
+              {
+                "fieldName": "seconds",
+                "handlerKey": "field.value"
+              }
+            ]
+          }
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value_and_name",
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "center"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "dtdurations",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 3,
+      "type": "state-timeline",
+      "title": "State timeline (24h)",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "mtc-postgres"
+      },
+      "timeFrom": "24h",
+      "gridPos": {
+        "x": 0,
+        "y": 5,
+        "w": 24,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "mtc-postgres"
+          },
+          "refId": "A",
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT GREATEST(start_ts, $__timeFrom()) AS time, device, state\nFROM state_intervals\nWHERE device IN ($device) AND end_ts >= $__timeFrom() AND start_ts <= $__timeTo()\nORDER BY 1"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "partitionByValues",
+          "options": {
+            "fields": [
+              "device"
+            ],
+            "naming": {
+              "asLabels": false
+            }
+          }
+        }
+      ],
+      "options": {
+        "mergeValues": true,
+        "showValue": "auto",
+        "alignValue": "left",
+        "rowHeight": 0.8,
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "ACTIVE": {
+                  "color": "green",
+                  "index": 0
+                },
+                "READY": {
+                  "color": "blue",
+                  "index": 1
+                },
+                "PROGRAM_COMPLETED": {
+                  "color": "light-blue",
+                  "index": 2
+                },
+                "FEED_HOLD": {
+                  "color": "yellow",
+                  "index": 3
+                },
+                "WAIT": {
+                  "color": "yellow",
+                  "index": 4
+                },
+                "INTERRUPTED": {
+                  "color": "orange",
+                  "index": 5
+                },
+                "STOPPED": {
+                  "color": "orange",
+                  "index": 6
+                },
+                "PROGRAM_STOPPED": {
+                  "color": "orange",
+                  "index": 7
+                },
+                "OPTIONAL_STOP": {
+                  "color": "orange",
+                  "index": 8
+                },
+                "UNAVAILABLE": {
+                  "color": "dark-red",
+                  "index": 9
+                },
+                "AGENT_RESTART": {
+                  "color": "purple",
+                  "index": 10
+                }
+              }
+            }
+          ],
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "gray"
+          },
+          "custom": {
+            "fillOpacity": 85,
+            "lineWidth": 0
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Utilization today",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "mtc-postgres"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 13,
+        "w": 12,
+        "h": 5
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "mtc-postgres"
+          },
+          "refId": "A",
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT device,\n       COALESCE(SUM(d) FILTER (WHERE state = 'ACTIVE'), 0)\n         / NULLIF(SUM(d) FILTER (WHERE state NOT IN ('UNAVAILABLE', 'AGENT_RESTART')), 0) AS utilization\nFROM (SELECT device, state,\n             EXTRACT(EPOCH FROM LEAST(end_ts, $__timeTo()) - GREATEST(start_ts, $__timeFrom())) AS d\n      FROM state_intervals\n      WHERE device IN ($device) AND end_ts > $__timeFrom() AND start_ts < $__timeTo()) i\nGROUP BY device ORDER BY device"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "rowsToFields",
+          "options": {
+            "mappings": [
+              {
+                "fieldName": "device",
+                "handlerKey": "field.name"
+              },
+              {
+                "fieldName": "utilization",
+                "handlerKey": "field.value"
+              }
+            ]
+          }
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value_and_name",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "decimals": 1,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 0.4
+              },
+              {
+                "color": "green",
+                "value": 0.7
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "timeFrom": "now/d"
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Utilization last 7 days",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "mtc-postgres"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 13,
+        "w": 12,
+        "h": 5
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "mtc-postgres"
+          },
+          "refId": "A",
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT device,\n       COALESCE(SUM(d) FILTER (WHERE state = 'ACTIVE'), 0)\n         / NULLIF(SUM(d) FILTER (WHERE state NOT IN ('UNAVAILABLE', 'AGENT_RESTART')), 0) AS utilization\nFROM (SELECT device, state,\n             EXTRACT(EPOCH FROM LEAST(end_ts, $__timeTo()) - GREATEST(start_ts, $__timeFrom())) AS d\n      FROM state_intervals\n      WHERE device IN ($device) AND end_ts > $__timeFrom() AND start_ts < $__timeTo()) i\nGROUP BY device ORDER BY device"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "rowsToFields",
+          "options": {
+            "mappings": [
+              {
+                "fieldName": "device",
+                "handlerKey": "field.name"
+              },
+              {
+                "fieldName": "utilization",
+                "handlerKey": "field.value"
+              }
+            ]
+          }
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value_and_name",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "decimals": 1,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 0.4
+              },
+              {
+                "color": "green",
+                "value": 0.7
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "timeFrom": "7d"
+    },
+    {
+      "id": 6,
+      "type": "table",
+      "title": "Time in each state (selected range)",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "mtc-postgres"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 18,
+        "w": 24,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "mtc-postgres"
+          },
+          "refId": "A",
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT device, state,\n       SUM(d) AS seconds,\n       SUM(d) / SUM(SUM(d)) OVER (PARTITION BY device) AS share\nFROM (SELECT device, state,\n             EXTRACT(EPOCH FROM LEAST(end_ts, $__timeTo()) - GREATEST(start_ts, $__timeFrom())) AS d\n      FROM state_intervals\n      WHERE device IN ($device) AND end_ts > $__timeFrom() AND start_ts < $__timeTo()) i\nGROUP BY device, state ORDER BY device, seconds DESC"
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "seconds"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dtdurations"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "share"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percentunit"
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "gauge",
+                  "mode": "basic"
+                }
+              },
+              {
+                "id": "min",
+                "value": 0
+              },
+              {
+                "id": "max",
+                "value": 1
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "state"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "ACTIVE": {
+                        "color": "green",
+                        "index": 0
+                      },
+                      "READY": {
+                        "color": "blue",
+                        "index": 1
+                      },
+                      "PROGRAM_COMPLETED": {
+                        "color": "light-blue",
+                        "index": 2
+                      },
+                      "FEED_HOLD": {
+                        "color": "yellow",
+                        "index": 3
+                      },
+                      "WAIT": {
+                        "color": "yellow",
+                        "index": 4
+                      },
+                      "INTERRUPTED": {
+                        "color": "orange",
+                        "index": 5
+                      },
+                      "STOPPED": {
+                        "color": "orange",
+                        "index": 6
+                      },
+                      "PROGRAM_STOPPED": {
+                        "color": "orange",
+                        "index": 7
+                      },
+                      "OPTIONAL_STOP": {
+                        "color": "orange",
+                        "index": 8
+                      },
+                      "UNAVAILABLE": {
+                        "color": "dark-red",
+                        "index": 9
+                      },
+                      "AGENT_RESTART": {
+                        "color": "purple",
+                        "index": 10
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 7,
+      "type": "table",
+      "title": "Active conditions (warnings & faults)",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "mtc-postgres"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 26,
+        "w": 24,
+        "h": 6
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "mtc-postgres"
+          },
+          "refId": "A",
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT device, level, type, native_code AS code, message, start_ts AS since,\n       EXTRACT(EPOCH FROM now() - start_ts) AS active_for\nFROM active_conditions\nWHERE device IN ($device)\nORDER BY level DESC, start_ts"
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "level"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "FAULT": {
+                        "color": "red",
+                        "index": 0
+                      },
+                      "WARNING": {
+                        "color": "yellow",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "active_for"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dtdurations"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 8,
+      "type": "table",
+      "title": "Condition history (selected range)",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "mtc-postgres"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 32,
+        "w": 24,
+        "h": 9
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "mtc-postgres"
+          },
+          "refId": "A",
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT start_ts AS time, device, level, type, native_code AS code, severity, message,\n       EXTRACT(EPOCH FROM COALESCE(end_ts, now()) - start_ts) AS duration,\n       CASE WHEN end_ts IS NULL THEN 'active' ELSE 'cleared' END AS status\nFROM condition_intervals\nWHERE device IN ($device) AND start_ts BETWEEN $__timeFrom() AND $__timeTo()\nORDER BY start_ts DESC"
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "level"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "FAULT": {
+                        "color": "red",
+                        "index": 0
+                      },
+                      "WARNING": {
+                        "color": "yellow",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "duration"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dtdurations"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 9,
+      "type": "table",
+      "title": "Machine snapshot (latest values)",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "mtc-postgres"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 41,
+        "w": 24,
+        "h": 6
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "mtc-postgres"
+          },
+          "refId": "A",
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "WITH latest AS (\n  SELECT DISTINCT ON (device, data_item_id) device, type, value\n  FROM observations WHERE device IN ($device) ORDER BY device, data_item_id, ts DESC, id DESC)\nSELECT device,\n       MAX(value) FILTER (WHERE type = 'Execution') AS state,\n       MAX(value) FILTER (WHERE type = 'ControllerMode') AS mode,\n       MAX(value) FILTER (WHERE type = 'Program' AND value NOT IN ('UNAVAILABLE', '')) AS program,\n       MAX(value) FILTER (WHERE type = 'ToolNumber') AS tool,\n       MAX(value) FILTER (WHERE type = 'WorkOffset') AS work_offset,\n       MAX(value) FILTER (WHERE type = 'DoorState') AS door,\n       MAX(value) FILTER (WHERE type = 'EmergencyStop') AS e_stop,\n       MAX(CASE WHEN type = 'PartCount' AND value ~ '^[0-9]+$' THEN value::int END) AS part_count,\n       MAX(CASE WHEN type = 'RotaryVelocity' AND value ~ '^-?[0-9.]+$' THEN value::float END) AS spindle_rpm\nFROM latest GROUP BY device ORDER BY device"
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "state"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "ACTIVE": {
+                        "color": "green",
+                        "index": 0
+                      },
+                      "READY": {
+                        "color": "blue",
+                        "index": 1
+                      },
+                      "PROGRAM_COMPLETED": {
+                        "color": "light-blue",
+                        "index": 2
+                      },
+                      "FEED_HOLD": {
+                        "color": "yellow",
+                        "index": 3
+                      },
+                      "WAIT": {
+                        "color": "yellow",
+                        "index": 4
+                      },
+                      "INTERRUPTED": {
+                        "color": "orange",
+                        "index": 5
+                      },
+                      "STOPPED": {
+                        "color": "orange",
+                        "index": 6
+                      },
+                      "PROGRAM_STOPPED": {
+                        "color": "orange",
+                        "index": 7
+                      },
+                      "OPTIONAL_STOP": {
+                        "color": "orange",
+                        "index": 8
+                      },
+                      "UNAVAILABLE": {
+                        "color": "dark-red",
+                        "index": 9
+                      },
+                      "AGENT_RESTART": {
+                        "color": "purple",
+                        "index": 10
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "door"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "OPEN": {
+                        "color": "red",
+                        "index": 0
+                      },
+                      "UNLATCHED": {
+                        "color": "orange",
+                        "index": 1
+                      },
+                      "CLOSED": {
+                        "color": "green",
+                        "index": 2
+                      },
+                      "TRIGGERED": {
+                        "color": "red",
+                        "index": 3
+                      },
+                      "ARMED": {
+                        "color": "green",
+                        "index": 4
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "e_stop"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "OPEN": {
+                        "color": "red",
+                        "index": 0
+                      },
+                      "UNLATCHED": {
+                        "color": "orange",
+                        "index": 1
+                      },
+                      "CLOSED": {
+                        "color": "green",
+                        "index": 2
+                      },
+                      "TRIGGERED": {
+                        "color": "red",
+                        "index": 3
+                      },
+                      "ARMED": {
+                        "color": "green",
+                        "index": 4
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 10,
+      "type": "stat",
+      "title": "Powered-on time (from machine counter)",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "mtc-postgres"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 47,
+        "w": 8,
+        "h": 5
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "mtc-postgres"
+          },
+          "refId": "A",
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT device, SUM(seconds) AS value FROM accumulated_time_hourly WHERE device IN ($device) AND hour >= date_trunc('hour', $__timeFrom()::timestamptz) AND hour <= $__timeTo() AND sub_type = 'x:TOTAL' GROUP BY device ORDER BY device"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "rowsToFields",
+          "options": {
+            "mappings": [
+              {
+                "fieldName": "device",
+                "handlerKey": "field.name"
+              },
+              {
+                "fieldName": "value",
+                "handlerKey": "field.value"
+              }
+            ]
+          }
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value_and_name",
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "center"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "dtdurations",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          }
+        },
+        "overrides": []
+      },
+      "description": "The machine's own timers: total_time (powered on) updates about every 2 minutes, auto_time and cut_time about every 10 seconds while running. Shares are approximate over short ranges."
+    },
+    {
+      "id": 11,
+      "type": "stat",
+      "title": "In-cycle share of powered time",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "mtc-postgres"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 47,
+        "w": 8,
+        "h": 5
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "mtc-postgres"
+          },
+          "refId": "A",
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT device, SUM(seconds) FILTER (WHERE sub_type = 'x:AUTO') / NULLIF(SUM(seconds) FILTER (WHERE sub_type = 'x:TOTAL'), 0) AS value\nFROM accumulated_time_hourly WHERE device IN ($device) AND hour >= date_trunc('hour', $__timeFrom()::timestamptz) AND hour <= $__timeTo() GROUP BY device ORDER BY device"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "rowsToFields",
+          "options": {
+            "mappings": [
+              {
+                "fieldName": "device",
+                "handlerKey": "field.name"
+              },
+              {
+                "fieldName": "value",
+                "handlerKey": "field.value"
+              }
+            ]
+          }
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value_and_name",
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "center"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "decimals": 1,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          }
+        },
+        "overrides": []
+      },
+      "description": "The machine's own timers: total_time (powered on) updates about every 2 minutes, auto_time and cut_time about every 10 seconds while running. Shares are approximate over short ranges."
+    },
+    {
+      "id": 12,
+      "type": "stat",
+      "title": "Cutting share of powered time",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "mtc-postgres"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 47,
+        "w": 8,
+        "h": 5
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "mtc-postgres"
+          },
+          "refId": "A",
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT device, SUM(seconds) FILTER (WHERE sub_type = 'x:CUT') / NULLIF(SUM(seconds) FILTER (WHERE sub_type = 'x:TOTAL'), 0) AS value\nFROM accumulated_time_hourly WHERE device IN ($device) AND hour >= date_trunc('hour', $__timeFrom()::timestamptz) AND hour <= $__timeTo() GROUP BY device ORDER BY device"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "rowsToFields",
+          "options": {
+            "mappings": [
+              {
+                "fieldName": "device",
+                "handlerKey": "field.name"
+              },
+              {
+                "fieldName": "value",
+                "handlerKey": "field.value"
+              }
+            ]
+          }
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value_and_name",
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "center"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "decimals": 1,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          }
+        },
+        "overrides": []
+      },
+      "description": "The machine's own timers: total_time (powered on) updates about every 2 minutes, auto_time and cut_time about every 10 seconds while running. Shares are approximate over short ranges."
+    },
+    {
+      "id": 13,
+      "type": "timeseries",
+      "title": "Machine time per hour: in-cycle and cutting (minutes, from machine counters)",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "mtc-postgres"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 52,
+        "w": 24,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "mtc-postgres"
+          },
+          "refId": "A",
+          "format": "time_series",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT hour AS time, device,\n       SUM(seconds) FILTER (WHERE sub_type = 'x:AUTO') / 60.0 AS in_cycle,\n       SUM(seconds) FILTER (WHERE sub_type = 'x:CUT') / 60.0 AS cutting\nFROM accumulated_time_hourly WHERE device IN ($device) AND hour >= date_trunc('hour', $__timeFrom()::timestamptz) AND hour <= $__timeTo() GROUP BY hour, device ORDER BY hour"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "m",
+          "min": 0,
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 70,
+            "lineWidth": 1,
+            "barAlignment": 1
+          },
+          "displayName": "${__field.labels.device} ${__field.name}"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*in_cycle"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "blue"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*cutting"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "description": "The machine's own timers: total_time (powered on) updates about every 2 minutes, auto_time and cut_time about every 10 seconds while running. Shares are approximate over short ranges."
+    },
+    {
+      "id": 14,
+      "type": "table",
+      "title": "Why did it stop? (feed hold / interrupted / stopped, with nearby conditions and door)",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "mtc-postgres"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 60,
+        "w": 24,
+        "h": 7
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "mtc-postgres"
+          },
+          "refId": "A",
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT s.start_ts AS time, s.device, s.state, s.duration_seconds AS duration,\n       (SELECT string_agg(DISTINCT c.level || ' ' || c.type || ' ' || c.native_code || ': ' || c.message, '; ')\n        FROM condition_intervals c\n        WHERE c.device = s.device AND c.start_ts BETWEEN s.start_ts - interval '5 minutes' AND s.end_ts) AS conditions_within_5_min,\n       EXISTS (SELECT 1 FROM observations o\n               WHERE o.device = s.device AND o.type = 'DoorState' AND o.value IN ('OPEN', 'UNLATCHED')\n                 AND o.ts BETWEEN s.start_ts AND s.end_ts) AS door_opened\nFROM state_intervals s\nWHERE s.device IN ($device) AND s.start_ts BETWEEN $__timeFrom() AND $__timeTo()\n  AND s.state NOT IN ('ACTIVE', 'READY', 'UNAVAILABLE', 'AGENT_RESTART', 'DATA_GAP')\nORDER BY s.start_ts DESC"
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "state"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "ACTIVE": {
+                        "color": "green",
+                        "index": 0
+                      },
+                      "READY": {
+                        "color": "blue",
+                        "index": 1
+                      },
+                      "PROGRAM_COMPLETED": {
+                        "color": "light-blue",
+                        "index": 2
+                      },
+                      "FEED_HOLD": {
+                        "color": "yellow",
+                        "index": 3
+                      },
+                      "WAIT": {
+                        "color": "yellow",
+                        "index": 4
+                      },
+                      "INTERRUPTED": {
+                        "color": "orange",
+                        "index": 5
+                      },
+                      "STOPPED": {
+                        "color": "orange",
+                        "index": 6
+                      },
+                      "PROGRAM_STOPPED": {
+                        "color": "orange",
+                        "index": 7
+                      },
+                      "OPTIONAL_STOP": {
+                        "color": "orange",
+                        "index": 8
+                      },
+                      "UNAVAILABLE": {
+                        "color": "dark-red",
+                        "index": 9
+                      },
+                      "AGENT_RESTART": {
+                        "color": "purple",
+                        "index": 10
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "duration"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dtdurations"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 15,
+      "type": "table",
+      "title": "Tool changes",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "mtc-postgres"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 67,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "mtc-postgres"
+          },
+          "refId": "A",
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT time, device, tool, previous_tool FROM (\n  SELECT ts AS time, device, value AS tool, LAG(value) OVER (PARTITION BY device, data_item_id ORDER BY ts, id) AS previous_tool\n  FROM observations WHERE type = 'ToolNumber' AND value <> 'UNAVAILABLE' AND device IN ($device)) t\nWHERE $__timeFilter(time) ORDER BY time DESC"
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      }
+    },
+    {
+      "id": 16,
+      "type": "table",
+      "title": "Operator activity (door, overrides, mode, e-stop)",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "mtc-postgres"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 67,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "mtc-postgres"
+          },
+          "refId": "A",
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT ts AS time, device, type AS what, COALESCE(sub_type, data_item_id) AS item, value\nFROM observations\nWHERE device IN ($device) AND $__timeFilter(ts)\n  AND type IN ('DoorState', 'PathFeedrateOverride', 'ControllerModeOverride', 'ControllerMode', 'EmergencyStop')\n  AND value <> 'UNAVAILABLE'\nORDER BY ts DESC LIMIT 200"
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "value"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "OPEN": {
+                        "color": "red",
+                        "index": 0
+                      },
+                      "UNLATCHED": {
+                        "color": "orange",
+                        "index": 1
+                      },
+                      "CLOSED": {
+                        "color": "green",
+                        "index": 2
+                      },
+                      "TRIGGERED": {
+                        "color": "red",
+                        "index": 3
+                      },
+                      "ARMED": {
+                        "color": "green",
+                        "index": 4
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 17,
+      "type": "timeseries",
+      "title": "Temperatures (spindle, servo, ...)",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "mtc-postgres"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 75,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "mtc-postgres"
+          },
+          "refId": "A",
+          "format": "time_series",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT ts AS time, device || ' ' || data_item_id AS metric, value::float AS value\nFROM observations\nWHERE type = 'Temperature' AND device IN ($device) AND value ~ '^-?[0-9.]+$' AND $__timeFilter(ts)\nORDER BY ts"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "celsius",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "stepAfter",
+            "spanNulls": true,
+            "showPoints": "auto"
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 18,
+      "type": "timeseries",
+      "title": "Spindle speed",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "mtc-postgres"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 75,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "mtc-postgres"
+          },
+          "refId": "A",
+          "format": "time_series",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT ts AS time, device || ' ' || data_item_id AS metric, value::float AS value\nFROM observations\nWHERE type = 'RotaryVelocity' AND device IN ($device) AND value ~ '^-?[0-9.]+$' AND $__timeFilter(ts)\nORDER BY ts"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "rpm",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "stepAfter",
+            "spanNulls": true,
+            "showPoints": "auto"
+          }
+        },
+        "overrides": []
+      }
+    }
+  ]
+}

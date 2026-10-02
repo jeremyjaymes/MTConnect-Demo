@@ -1,0 +1,59 @@
+# --- Secrets and local config: never commit these ---------------------------------
+.env
+.env.*
+!.env.example
+docker-compose.override.yml
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+id_rsa*
+id_ed25519*
+credentials*.json
+secrets.*
+
+# --- Machine data and backups (can contain production data) ----------------------
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+*.dump
+*.bak
+*.backup
+*.sql.gz
+*.csv
+data/
+backups/
+
+# --- Logs --------------------------------------------------------------------------
+*.log
+nohup.out
+
+# --- Python -----------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+build/
+dist/
+
+# --- Tests and tooling caches ------------------------------------------------------
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# --- OS and editors ---------------------------------------------------------------
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# --- Claude Code local state (CLAUDE.md is shared; local settings are not) ---------
+.claude/settings.local.json
