@@ -55,5 +55,5 @@ Thumbs.db
 .vscode/
 *.swp
 
-# --- Claude Code local state (CLAUDE.md is shared; local settings are not) ---------
-.claude/settings.local.json
+# --- Local editor and agent settings ----------------------------------------------
+.claude/
